@@ -1,0 +1,1605 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme{default}
+\usecolortheme{default}
+
+% Slide numbers
+\setbeamertemplate{footline}{
+	\hfill%
+	\usebeamercolor[fg]{page number in head/foot}%
+	\usebeamerfont{page number in head/foot}%
+	\insertframenumber\,/\,\inserttotalframenumber\kern1em\vskip2pt%
+}
+
+% Packages
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{xcolor}
+\usepackage{listings}
+
+% Python code styling
+\lstset{
+  language=Python,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue},
+  stringstyle=\color{red},
+  commentstyle=\color{gray},
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  numbers=left,
+  numberstyle=\tiny\color{gray}
+}
+
+% Math commands for Bishop notation
+\newcommand{\vect}[1]{\mathbf{#1}}
+\newcommand{\matr}[1]{\mathbf{#1}}
+\newcommand{\Real}{\mathbb{R}}
+
+% Title information
+\title{Principal Component Analysis}
+\subtitle{Dimensionality Reduction and the Maximum Variance Perspective}
+\author{Based on Bishop PRML Chapter 12}
+\date{\today}
+
+\begin{document}
+
+% Title slide
+\begin{frame}
+	\titlepage
+\end{frame}
+
+% ============================================================================
+% SECTION I: MOTIVATION & CONTEXT
+% ============================================================================
+
+\begin{frame}{The Dimensionality Challenge}
+	Modern machine learning confronts us with high-dimensional data:
+
+	\vspace{1em}
+	\begin{itemize}
+		\item Images: 28×28 grayscale = 784 dimensions
+		\item Genomics: thousands of gene expressions per sample
+		\item Text: vocabulary size in tens of thousands
+		\item Sensor arrays: hundreds of simultaneous measurements
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Problems we face:}
+	\begin{itemize}
+		\item Cannot visualize beyond 3D
+		\item Computational cost scales poorly with dimension
+		\item Many algorithms struggle in high dimensions
+		      (curse of dimensionality)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{What We Want}
+	An ideal dimensionality reduction method should:
+
+	\vspace{1em}
+	\begin{itemize}
+		\item Find a low-dimensional representation of high-dimensional data
+		      \pause
+		\item Preserve the ``meaningful'' structure in the data
+		      \pause
+		\item Enable visualization and interpretation
+		      \pause
+		\item Provide efficient computation
+		      \pause
+		\item Serve as preprocessing for downstream tasks
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{The central question:}
+	What does ``meaningful'' mean mathematically?
+\end{frame}
+
+\begin{frame}{Real-World Applications}
+	\begin{figure}
+		\centering
+		\begin{subfigure}[t]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{figures/eigenfaces.png}
+			\caption{Face recognition using eigenfaces}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{figures/genomics_pca.png}
+			\caption{Gene expression analysis}
+		\end{subfigure}
+
+		\vspace{0.3em}
+
+		\begin{subfigure}[t]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{figures/financial_pca.png}
+			\caption{Financial time series analysis}
+		\end{subfigure}
+		\hfill
+		\begin{subfigure}[t]{0.48\textwidth}
+			\centering
+			\includegraphics[width=\textwidth]{figures/mnist_pca.png}
+			\caption{Handwritten digit recognition}
+		\end{subfigure}
+	\end{figure}
+\end{frame}
+
+\begin{frame}{The Core Question}
+	Given data in $D$ dimensions,
+	we want to project it to $M$ dimensions where $M \ll D$.
+
+	\vspace{1em}
+	\pause
+
+	There are infinitely many ways to project high-dimensional data
+	to lower dimensions.
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Which projection is ``best''?}
+
+	\vspace{1em}
+	\pause
+
+	Principal Component Analysis provides an answer
+	based on two equivalent perspectives:
+	\begin{enumerate}
+		\item \textbf{Maximum variance:}
+		Keep directions with highest variance
+		\item \textbf{Minimum error:}
+		Minimize information loss from projection
+	\end{enumerate}
+
+	\vspace{0.5em}
+	Both lead to the same solution.
+\end{frame}
+
+% ============================================================================
+% SECTION II: INTUITIVE INTRODUCTION
+% ============================================================================
+
+\begin{frame}{A Simple 2D Example}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					A 2D scatter plot showing approximately 100-150 data points
+					forming an elongated elliptical cloud.
+					The data should be centered at the origin
+					and stretched along a diagonal direction
+					(e.g., 45 degrees from horizontal).
+					The points should form a clear elliptical shape
+					with major axis about 3-4 times longer than minor axis.
+					Use blue dots for the points.
+					Axes should be labeled $x_1$ and $x_2$,
+					ranging from approximately -4 to 4 on both axes.
+					No arrows or overlays yet---just the raw data.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	Consider data naturally lying along an elongated cloud.
+	There's clearly more ``spread'' in some directions than others.
+\end{frame}
+
+\begin{frame}{Intuition: Direction of Spread}
+	The data varies more in some directions than in others.
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Key insight:}
+	Directions with high variance contain more ``information''
+	about the structure of the data.
+
+	\vspace{1em}
+	\pause
+
+	If we must reduce from 2D to 1D,
+	we should keep the direction along which the data varies most.
+
+	\vspace{1em}
+	\pause
+
+	This direction of maximum variance is the \textbf{first principal component}.
+\end{frame}
+
+\begin{frame}{Visual: First Principal Component}
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{figures/slide09_first_pc.png}
+
+		\vspace{0.3em}
+		\small{\textit{First principal component $\vect{u}_1$ captures maximum variance}}
+	\end{center}
+
+	\vspace{0.5em}
+	The first principal component $\vect{u}_1$
+	points in the direction of maximum variance.
+\end{frame}
+
+\begin{frame}{Visual: Second Principal Component}
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{figures/slide10_both_pcs.png}
+
+		\vspace{0.3em}
+		\small{\textit{Both principal components shown as orthogonal vectors}}
+	\end{center}
+
+	\vspace{0.5em}
+	The second principal component $\vect{u}_2$ is orthogonal to the first
+	and captures the direction of next-highest variance.
+\end{frame}
+
+\begin{frame}{Projection Intuition}
+	\begin{center}
+		\includegraphics[width=0.7\textwidth]{figures/slide11_projection.png}
+
+		\vspace{0.3em}
+		\small{\textit{Projection onto first principal component reduces dimensionality}}
+	\end{center}
+
+	\vspace{0.5em}
+	Projecting onto $\vect{u}_1$ reduces dimensionality from 2D to 1D
+	while preserving maximum variance.
+\end{frame}
+
+\begin{frame}{Information Preservation}
+	\textbf{Original data:} 2 dimensions $(x_1, x_2)$
+
+	\textbf{Reduced data:} 1 dimension (coordinate along $\vect{u}_1$)
+
+	\vspace{1em}
+	\pause
+
+	What did we lose?
+	\begin{itemize}
+		\item Variance in the perpendicular direction
+		      ($\vect{u}_2$ direction)
+		\item This is the ``small'' variance---less important
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	What did we keep?
+	\begin{itemize}
+		\item Variance in the principal direction
+		\item This is the ``large'' variance---more important
+		\item The overall structure and spread of the data
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{The Key Insight}
+	Principal Component Analysis finds:
+
+	\vspace{1em}
+	\begin{enumerate}
+		\item A set of orthogonal directions (principal components)
+		      \pause
+		\item Ordered by the variance of data along each direction
+		      \pause
+		\item First component = maximum variance direction
+		      \pause
+		\item Second component =
+		      maximum variance among directions orthogonal to first
+		      \pause
+		\item And so on...
+	\end{enumerate}
+
+	\vspace{1em}
+	\pause
+
+	For dimensionality reduction:
+	project data onto the top $M$ principal components.
+
+	\vspace{0.5em}
+	This captures as much variance as possible in $M$ dimensions.
+\end{frame}
+
+% ============================================================================
+% SECTION III: MATHEMATICAL FORMULATION - MAXIMUM VARIANCE
+% ============================================================================
+
+\begin{frame}{Setup: The Data Matrix}
+	Consider a dataset of $N$ observations, each in $D$ dimensions:
+	\[
+		\vect{x}_1, \vect{x}_2, \ldots, \vect{x}_N
+		\quad \text{where } \vect{x}_n \in \Real^D
+	\]
+
+	\pause
+
+	The sample mean is:
+	\[
+		\bar{\vect{x}} = \frac{1}{N} \sum_{n=1}^N \vect{x}_n
+	\]
+
+	\pause
+
+	\textbf{Mean-centered data:}
+	\[
+		\tilde{\vect{x}}_n = \vect{x}_n - \bar{\vect{x}}
+	\]
+
+	\pause
+
+	\textbf{Why centering matters:}
+	PCA finds directions of maximum variance around the mean.
+	Without centering, we'd be finding variance around the origin,
+	which is not meaningful.
+\end{frame}
+
+\begin{frame}{Finding the First Principal Component}
+	We seek a direction $\vect{u}_1 \in \Real^D$ such that
+	the variance of the data projected onto this direction is maximized.
+
+	\vspace{1em}
+	\pause
+
+	Constraint: $\vect{u}_1$ must be a unit vector:
+	\[
+		\vect{u}_1^T \vect{u}_1 = 1
+	\]
+
+	\pause
+
+	(Without this constraint,
+	we could make variance arbitrarily large by scaling $\vect{u}_1$.)
+
+	\vspace{1em}
+	\pause
+
+	The projection of each data point $\tilde{\vect{x}}_n$ onto $\vect{u}_1$ is:
+	\[
+		\vect{u}_1^T \tilde{\vect{x}}_n
+	\]
+
+	This is a scalar---the coordinate along $\vect{u}_1$.
+\end{frame}
+
+\begin{frame}{Variance of Projections}
+	The projected data are the scalars:
+	$\vect{u}_1^T \tilde{\vect{x}}_1, \vect{u}_1^T \tilde{\vect{x}}_2, \ldots,
+	\vect{u}_1^T \tilde{\vect{x}}_N$
+
+	\vspace{1em}
+	\pause
+
+	Since the data are mean-centered, the mean of projections is zero:
+	\[
+		\frac{1}{N}\sum_{n=1}^N \vect{u}_1^T \tilde{\vect{x}}_n
+		= \vect{u}_1^T \left(\frac{1}{N}\sum_{n=1}^N \tilde{\vect{x}}_n\right)
+		= \vect{u}_1^T \vect{0} = 0
+	\]
+
+	\vspace{1em}
+	\pause
+
+	The sample variance of projections is:
+	\[
+		\frac{1}{N} \sum_{n=1}^N (\vect{u}_1^T \tilde{\vect{x}}_n)^2
+	\]
+
+	\textbf{Goal:} Maximize this quantity over choice of $\vect{u}_1$.
+\end{frame}
+
+\begin{frame}{The Covariance Matrix}
+	We can rewrite the variance more compactly using the data covariance matrix.
+
+	\vspace{1em}
+	\pause
+
+	Define the \textbf{sample covariance matrix}:
+	\[
+		\matr{S} = \frac{1}{N} \sum_{n=1}^N \tilde{\vect{x}}_n \tilde{\vect{x}}_n^T
+	\]
+
+	\pause
+
+	This is a $D \times D$ matrix capturing the variance and covariance structure
+	of the data.
+
+	\vspace{1em}
+	\pause
+
+	Note: $\matr{S}$ is symmetric and positive semi-definite.
+\end{frame}
+
+\begin{frame}{Variance in Matrix Form}
+	The variance of projections can now be written as:
+	\begin{align*}
+		\frac{1}{N} \sum_{n=1}^N (\vect{u}_1^T \tilde{\vect{x}}_n)^2
+		 & = \frac{1}{N} \sum_{n=1}^N
+		\vect{u}_1^T \tilde{\vect{x}}_n \tilde{\vect{x}}_n^T \vect{u}_1              \\
+		\pause
+		 & = \vect{u}_1^T \left(\frac{1}{N} \sum_{n=1}^N
+		\tilde{\vect{x}}_n \tilde{\vect{x}}_n^T\right) \vect{u}_1                    \\
+		\pause
+		 & = \vect{u}_1^T \matr{S} \vect{u}_1
+	\end{align*}
+
+	\pause
+
+	\textbf{Our optimization problem:}
+	\[
+		\max_{\vect{u}_1} \vect{u}_1^T \matr{S} \vect{u}_1
+		\quad \text{subject to} \quad \vect{u}_1^T \vect{u}_1 = 1
+	\]
+\end{frame}
+
+\begin{frame}{Constrained Optimization}
+	We use the method of Lagrange multipliers.
+
+	\vspace{1em}
+	\pause
+
+	Form the Lagrangian:
+	\[
+		\mathcal{L}(\vect{u}_1, \lambda_1) = \vect{u}_1^T \matr{S} \vect{u}_1
+		+ \lambda_1(1 - \vect{u}_1^T \vect{u}_1)
+	\]
+
+	\pause
+
+	where $\lambda_1$ is the Lagrange multiplier.
+
+	\vspace{1em}
+	\pause
+
+	Taking the derivative with respect to $\vect{u}_1$ and setting to zero:
+	\[
+		\frac{\partial \mathcal{L}}{\partial \vect{u}_1}
+		= 2\matr{S}\vect{u}_1 - 2\lambda_1 \vect{u}_1 = \vect{0}
+	\]
+\end{frame}
+
+\begin{frame}{The Solution Emerges}
+	From the stationarity condition:
+	\[
+		2\matr{S}\vect{u}_1 - 2\lambda_1 \vect{u}_1 = \vect{0}
+	\]
+
+	\pause
+
+	Simplifying:
+	\[
+		\matr{S}\vect{u}_1 = \lambda_1 \vect{u}_1
+	\]
+
+	\pause
+
+	\textbf{This is an eigenvalue equation!}
+
+	\vspace{1em}
+	\begin{itemize}
+		\item $\vect{u}_1$ is an eigenvector of the covariance matrix $\matr{S}$
+		\item $\lambda_1$ is the corresponding eigenvalue
+	\end{itemize}
+
+	\vspace{0.5em}
+	See Bishop eq. 12.6
+\end{frame}
+
+\begin{frame}{Which Eigenvector?}
+	The covariance matrix $\matr{S}$ has $D$ eigenvectors
+	(assuming $N \geq D$).
+
+	\textbf{Which one do we choose?}
+
+	\vspace{1em}
+	\pause
+
+	Multiply the eigenvalue equation by $\vect{u}_1^T$:
+	\[
+		\vect{u}_1^T \matr{S} \vect{u}_1
+		= \lambda_1 \vect{u}_1^T \vect{u}_1 = \lambda_1
+	\]
+
+	\pause
+
+	But $\vect{u}_1^T \matr{S} \vect{u}_1$ is exactly the variance
+	we're trying to maximize!
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Conclusion:}
+	The variance captured equals the eigenvalue $\lambda_1$.
+
+	\vspace{0.5em}
+	To maximize variance,
+	choose the eigenvector with the \textbf{largest eigenvalue}.
+\end{frame}
+
+\begin{frame}{Subsequent Principal Components}
+	For the second principal component $\vect{u}_2$:
+
+	\vspace{1em}
+	\begin{itemize}
+		\item Maximize variance of projections onto $\vect{u}_2$
+		      \pause
+		\item Subject to: $\vect{u}_2^T \vect{u}_2 = 1$ (unit vector)
+		      \pause
+		\item \textbf{And}: $\vect{u}_2^T \vect{u}_1 = 0$
+		      (orthogonal to first PC)
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	Following similar derivation, we find:
+	\[
+		\matr{S}\vect{u}_2 = \lambda_2 \vect{u}_2
+	\]
+
+	where $\vect{u}_2$ is the eigenvector with the second-largest eigenvalue
+	$\lambda_2$.
+
+	\vspace{1em}
+	\pause
+
+	\textbf{General pattern:}
+	The $i$-th principal component is the eigenvector corresponding to
+	the $i$-th largest eigenvalue.
+\end{frame}
+
+\begin{frame}{Complete Solution}
+	The covariance matrix has eigendecomposition:
+	\[
+		\matr{S} = \sum_{i=1}^D \lambda_i \vect{u}_i \vect{u}_i^T
+	\]
+
+	where $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_D \geq 0$.
+
+	\vspace{1em}
+	\pause
+
+	The principal components are:
+	\begin{itemize}
+		\item $\vect{u}_1, \vect{u}_2, \ldots, \vect{u}_D$ (eigenvectors)
+		\item Ordered by their corresponding eigenvalues
+		\item Form an orthonormal basis of $\Real^D$
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	The variance captured by the $i$-th component is $\lambda_i$.
+\end{frame}
+
+\begin{frame}{Summary of Maximum Variance Formulation}
+	\textbf{Problem:}
+	Find low-dimensional projection preserving maximum variance.
+
+	\vspace{1em}
+	\textbf{Solution:}
+	\begin{enumerate}
+		\item Compute the sample covariance matrix $\matr{S}$
+		\item Find eigenvalues and eigenvectors of $\matr{S}$
+		\item Sort eigenvalues:
+		      $\lambda_1 \geq \lambda_2 \geq \cdots \geq \lambda_D$
+		\item The first $M$ principal components are the eigenvectors
+		      $\vect{u}_1, \ldots, \vect{u}_M$
+		\item Project data:
+		      $\vect{z}_n = \matr{U}_M^T \tilde{\vect{x}}_n$
+		      where $\matr{U}_M = [\vect{u}_1 \cdots \vect{u}_M]$
+	\end{enumerate}
+
+	\vspace{1em}
+	Total variance captured: $\sum_{i=1}^M \lambda_i$
+
+	Total variance in data: $\sum_{i=1}^D \lambda_i = \text{tr}(\matr{S})$
+\end{frame}
+
+% ============================================================================
+% SECTION IV: ALTERNATIVE FORMULATION - MINIMUM RECONSTRUCTION ERROR
+% ============================================================================
+
+\begin{frame}{A Different Perspective}
+	Instead of \emph{maximizing variance captured}...
+
+	\vspace{1em}
+	\pause
+
+	...we can equivalently \emph{minimize information loss} from projection.
+
+	\vspace{2em}
+	\pause
+
+	\textbf{Idea:}
+	\begin{itemize}
+		\item Project data onto $M$-dimensional subspace
+		\item Reconstruct back to original $D$ dimensions
+		\item Measure error between original and reconstruction
+		\item Choose subspace that minimizes this error
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{The Projection Operation}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.75\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Geometric visualization showing three stages:
+					\begin{enumerate}
+						\item Original point $\tilde{\vect{x}}_n$ in 3D space
+						      (shown as a blue dot)
+						\item A 2D plane passing through the origin
+						      (the subspace spanned by first 2 PCs),
+						      shown in light gray
+						\item The projection of $\tilde{\vect{x}}_n$ onto the plane
+						      (shown as a red dot),
+						      with a dashed line connecting the original point
+						      to its projection (perpendicular to the plane)
+						\item The reconstructed point $\hat{\vect{x}}_n$
+						      (same as projection, emphasized)
+					\end{enumerate}
+					Label the perpendicular distance as ``reconstruction error.''
+					Show coordinate axes and the 2D subspace clearly.
+					Make it look like a standard geometric projection diagram.
+				}}}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Mathematical Formulation}
+	Let $\vect{z}_n \in \Real^M$ be the projection of $\tilde{\vect{x}}_n$
+	onto the $M$-dimensional subspace.
+
+	\vspace{1em}
+	\pause
+
+	Representation in subspace:
+	\[
+		\vect{z}_n = \matr{U}_M^T \tilde{\vect{x}}_n
+	\]
+	where $\matr{U}_M = [\vect{u}_1, \ldots, \vect{u}_M]$ spans the subspace.
+
+	\vspace{1em}
+	\pause
+
+	Reconstruction back to $D$ dimensions:
+	\[
+		\hat{\vect{x}}_n = \matr{U}_M \vect{z}_n
+		= \matr{U}_M \matr{U}_M^T \tilde{\vect{x}}_n
+	\]
+
+	\pause
+
+	(Note: $\matr{U}_M \matr{U}_M^T$ is the projection matrix onto the subspace.)
+\end{frame}
+
+\begin{frame}{Reconstruction Error}
+	The reconstruction error for point $n$ is:
+	\[
+		\|\tilde{\vect{x}}_n - \hat{\vect{x}}_n\|^2
+		= \|\tilde{\vect{x}}_n - \matr{U}_M \matr{U}_M^T \tilde{\vect{x}}_n\|^2
+	\]
+
+	\vspace{1em}
+	\pause
+
+	The total reconstruction error across all data points:
+	\[
+		J = \frac{1}{N}\sum_{n=1}^N
+		\|\tilde{\vect{x}}_n - \matr{U}_M \matr{U}_M^T \tilde{\vect{x}}_n\|^2
+	\]
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Goal:}
+	Choose the $M$-dimensional subspace (i.e., choose $\matr{U}_M$)
+	to minimize $J$.
+\end{frame}
+
+\begin{frame}{Equivalence to Maximum Variance}
+	It can be shown that:
+	\[
+		\sum_{n=1}^N \|\tilde{\vect{x}}_n - \hat{\vect{x}}_n\|^2
+		+ \sum_{n=1}^N \|\hat{\vect{x}}_n\|^2
+		= \sum_{n=1}^N \|\tilde{\vect{x}}_n\|^2 = \text{constant}
+	\]
+
+	\pause
+
+	The first term is variance \emph{lost} (reconstruction error).
+
+	The second term is variance \emph{captured} (in the subspace).
+
+	The third term is total variance (fixed).
+
+	\vspace{1em}
+	\pause
+
+	Therefore:
+	\[
+		\text{Minimizing reconstruction error}
+		\iff \text{Maximizing captured variance}
+	\]
+
+	\vspace{0.5em}
+	Both formulations yield the same solution!
+	See Bishop §12.1.1
+\end{frame}
+
+\begin{frame}{Intuitive Connection}
+	\begin{center}
+		\fbox{\parbox{0.8\textwidth}{\color{blue}
+					\textbf{Variance decomposition}
+
+					\vspace{0.5em}
+
+					Total variance = Captured variance + Lost variance
+
+					\vspace{0.5em}
+
+					(constant) \quad = \quad (in subspace)
+					\quad + \quad (reconstruction error)
+				}}
+	\end{center}
+
+	\vspace{1em}
+	\pause
+
+	Since total variance is fixed:
+	\begin{itemize}
+		\item Maximizing captured variance
+		      $\Leftrightarrow$ Minimizing lost variance
+		\item Maximum variance formulation
+		      $\Leftrightarrow$ Minimum error formulation
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Both perspectives lead to the same principal components.}
+\end{frame}
+
+\begin{frame}{Geometric Interpretation}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Side-by-side comparison showing orthogonal decomposition
+					of a data point in 2D:
+					\begin{itemize}
+						\item Left panel:
+						Show original centered data point $\tilde{\vect{x}}_n$
+						as a blue arrow from origin.
+						Show the 1D subspace
+						(line through origin representing span of $\vect{u}_1$).
+						Decompose the point into two orthogonal components:
+						parallel component (projection onto line, in green)
+						and perpendicular component (reconstruction error, in red).
+						Use right angle symbol to show orthogonality.
+						\item Right panel:
+						Same decomposition but label green component as
+						``Captured (large variance)''
+						and red component as ``Lost (small variance).''
+						Show that minimizing red component is equivalent to
+						maximizing green component.
+					\end{itemize}
+					Use clear arrows and labels.
+				}}}
+	\end{center}
+\end{frame}
+
+% ============================================================================
+% SECTION V: PRACTICAL IMPLEMENTATION
+% ============================================================================
+
+\begin{frame}{The PCA Algorithm}
+	\textbf{Input:}
+	Data matrix $\matr{X}$ of size $N \times D$, desired dimension $M$
+
+	\textbf{Algorithm:}
+	\begin{enumerate}
+		\item Compute mean:
+		      $\bar{\vect{x}} = \frac{1}{N}\sum_{n=1}^N \vect{x}_n$
+		      \pause
+		\item Center data:
+		      $\tilde{\vect{x}}_n = \vect{x}_n - \bar{\vect{x}}$ for all $n$
+		      \pause
+		\item Compute covariance:
+		      $\matr{S} = \frac{1}{N}\sum_{n=1}^N
+		      \tilde{\vect{x}}_n \tilde{\vect{x}}_n^T$
+		      \pause
+		\item Eigendecomposition:
+		      Find eigenvalues $\lambda_i$ and eigenvectors $\vect{u}_i$ of $\matr{S}$
+		      \pause
+		\item Sort:
+		      Order eigenvalues (and eigenvectors) in descending order
+		      \pause
+		\item Select:
+		      Take first $M$ eigenvectors to form
+		      $\matr{U}_M = [\vect{u}_1 \cdots \vect{u}_M]$
+		      \pause
+		\item Project:
+		      $\vect{z}_n = \matr{U}_M^T \tilde{\vect{x}}_n$ for all $n$
+	\end{enumerate}
+
+	\textbf{Output:}
+	Low-dimensional representations $\vect{z}_1, \ldots, \vect{z}_N$
+\end{frame}
+
+\begin{frame}{Computational Considerations}
+	\textbf{Covariance matrix:} $D \times D$ (can be very large!)
+
+	\begin{itemize}
+		\item For $D = 10{,}000$ features,
+		      $\matr{S}$ requires $\sim$800 MB (double precision)
+		\item Eigendecomposition: $O(D^3)$ complexity
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{More efficient alternative:}
+	Singular Value Decomposition (SVD)
+
+	\begin{itemize}
+		\item Apply SVD directly to centered data matrix $\tilde{\matr{X}}$
+		      (size $N \times D$)
+		\item $\tilde{\matr{X}} = \matr{U} \matr{\Sigma} \matr{V}^T$
+		\item Right singular vectors (columns of $\matr{V}$)
+		      are the principal components
+		\item Eigenvalues: $\lambda_i = \sigma_i^2 / N$
+		\item More numerically stable and often faster when $N < D$
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	Standard implementations (scikit-learn, R, MATLAB) use SVD internally.
+\end{frame}
+
+\begin{frame}{How Many Components?}
+	\textbf{The fundamental question:} What should $M$ be?
+
+	\vspace{1em}
+	\pause
+
+	No single correct answer---depends on application:
+	\begin{itemize}
+		\item Visualization: $M = 2$ or $M = 3$
+		\item Dimensionality reduction for ML:
+		      determined by validation
+		\item Compression: trade-off between size and quality
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	Several diagnostic tools help us decide:
+	\begin{enumerate}
+		\item Scree plot (eigenvalue spectrum)
+		\item Cumulative variance explained
+		\item Cross-validation on downstream task
+		\item Domain knowledge
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}{Scree Plot}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					A scree plot showing eigenvalue magnitude vs. component number.
+					X-axis: ``Principal Component'' numbered 1 to 20.
+					Y-axis: ``Eigenvalue $\lambda_i$'' (log scale preferred).
+					The plot should show a characteristic ``elbow'' pattern:
+					first few eigenvalues are large and drop rapidly,
+					then there's an elbow around component 4-5,
+					after which eigenvalues decrease slowly.
+					Mark the elbow point with a dashed vertical line
+					and annotation ``Elbow suggests $M \approx 4$''.
+					Use blue circles connected by lines.
+					Include a horizontal red dashed line showing
+					``noise floor'' for the smallest eigenvalues.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	Look for the ``elbow'' where eigenvalues drop off sharply, then plateau.
+\end{frame}
+
+\begin{frame}{Cumulative Variance Explained}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Plot of cumulative proportion of variance explained
+					vs. number of components.
+					X-axis: ``Number of Components $M$'' from 1 to 20.
+					Y-axis: ``Cumulative Variance Explained'' from 0 to 1
+					(or 0\% to 100\%).
+					Show a monotonically increasing curve that starts steep
+					and gradually flattens.
+					Add horizontal dashed lines at 0.90, 0.95, and 0.99 with labels.
+					Add vertical dashed lines showing how many components needed
+					to reach each threshold
+					(e.g., $M=5$ for 90\%, $M=8$ for 95\%, $M=12$ for 99\%).
+					Use a smooth blue curve.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	Proportion of variance explained by first $M$ components:
+	\[
+		\frac{\sum_{i=1}^M \lambda_i}{\sum_{i=1}^D \lambda_i}
+	\]
+
+	Common thresholds: 90\%, 95\%, or 99\% variance explained.
+\end{frame}
+
+\begin{frame}{Data Preprocessing Matters}
+	\textbf{Centering:} Always required for PCA
+	\begin{itemize}
+		\item Ensures we measure variance around the data mean,
+		      not the origin
+		\item Already discussed
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Scaling:} Often necessary but not automatic
+	\begin{itemize}
+		\item PCA is sensitive to the scale of features
+		\item Feature with large variance (e.g., income in dollars)
+		      will dominate
+		\item Feature with small variance (e.g., age in years)
+		      will be ignored
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Standard practice:}
+	Standardize features to unit variance
+	\[
+		x_{nd} \leftarrow \frac{x_{nd} - \bar{x}_d}{\sigma_d}
+	\]
+	where $\sigma_d$ is the standard deviation of feature $d$.
+
+	\vspace{0.5em}
+	This ensures all features contribute on equal footing.
+\end{frame}
+
+\begin{frame}{Practical Example Setup}
+	We'll work through PCA on a classic dataset.
+
+	\vspace{1em}
+
+	\textbf{Iris Dataset:}
+	\begin{itemize}
+		\item 150 samples of iris flowers
+		\item 4 features:
+		      sepal length, sepal width, petal length, petal width
+		\item 3 species: setosa, versicolor, virginica
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Goal:}
+	\begin{itemize}
+		\item Reduce from 4D to 2D for visualization
+		\item See if species structure is preserved
+		\item Interpret what principal components represent
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	This is a perfect example because:
+	\begin{itemize}
+		\item Low enough dimension to understand fully
+		\item Real biological data with known structure
+		\item Widely recognized in ML community
+	\end{itemize}
+\end{frame}
+
+% ============================================================================
+% SECTION VI: WORKED EXAMPLE
+% ============================================================================
+
+\begin{frame}{Example: Original High-Dimensional Data}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.8\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					A 2×2 grid of scatter plots showing pairwise relationships
+					between the 4 iris features.
+					Each subplot shows two features against each other
+					(sepal length vs sepal width, sepal length vs petal length, etc.).
+					Points should be colored by species:
+					red for setosa, green for versicolor, blue for virginica.
+					This creates a ``pairs plot'' or ``scatter plot matrix.''
+					Label axes clearly with feature names.
+					Show that in the original feature space,
+					species have some separation but overlap exists in certain views.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	The original 4D space shown as pairwise projections.
+	Some separation between species is visible, but overlapping.
+\end{frame}
+
+\begin{frame}{Covariance Structure}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.6\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Heatmap of the 4×4 covariance matrix.
+					Rows and columns labeled:
+					sepal length, sepal width, petal length, petal width.
+					Use a diverging colormap
+					(e.g., blue for negative, white for zero,
+					red for positive correlations).
+					Strong positive correlations should appear
+					between petal length/width and sepal length.
+					Sepal width might show weaker or slightly negative correlation
+					with others.
+					Add a colorbar.
+					Annotate cells with numerical correlation values.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	The covariance matrix reveals strong correlations between certain features
+	(e.g., petal dimensions).
+\end{frame}
+
+\begin{frame}{Eigenvalue Spectrum}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Scree plot for the Iris dataset showing 4 eigenvalues.
+					X-axis: Component number (1-4).
+					Y-axis: Eigenvalue magnitude.
+					Show bars or connected points.
+					First eigenvalue should be dominant (much larger than others),
+					second eigenvalue moderate, third and fourth small.
+					Include numerical labels on each point
+					showing the actual eigenvalue.
+					Below or beside,
+					show the variance explained by each component as percentages
+					(e.g., PC1: 72.9\%, PC2: 22.8\%, PC3: 3.7\%, PC4: 0.5\%
+					--- these are approximate typical values for scaled Iris data).
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	First two components capture $\sim$96\% of variance---excellent
+	for 2D visualization!
+\end{frame}
+
+\begin{frame}{First Two Principal Components}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					2D scatter plot of the Iris data projected onto
+					the first two principal components.
+					X-axis: ``First Principal Component (PC1)''
+					ranging approximately -3 to 3.
+					Y-axis: ``Second Principal Component (PC2)''
+					ranging approximately -2 to 2.
+					Color points by species
+					(same colors as before:
+					red setosa, green versicolor, blue virginica).
+					Show that setosa is clearly separated from the other two species,
+					while versicolor and virginica have slight overlap.
+					This demonstrates that PCA preserves the species structure well.
+					Add a legend showing species colors.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	The 2D projection preserves species separation well.
+	Setosa is distinctly separated;
+	some overlap between versicolor and virginica.
+\end{frame}
+
+\begin{frame}{Reconstruction Quality}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.8\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Show reconstruction quality comparison.
+					Create a 2×3 grid:
+					\begin{itemize}
+						\item Row 1:
+						Three iris flower samples
+						(can be stylized representations or actual iris photos)
+						\item Row 2:
+						Reconstructions of the same samples using 2 PCs
+					\end{itemize}
+					Add text below each column showing
+					``Original'', ``2 PCs (96\% var.)''.
+					If using actual measurements,
+					show the 4 feature values as bar charts for each sample,
+					comparing original (blue bars) vs. reconstructed (orange bars).
+					Include reconstruction error values.
+				}}}
+	\end{center}
+
+	\vspace{0.5em}
+	With 2 components (96\% variance), reconstruction is excellent.
+	Original and reconstructed feature values are very close.
+\end{frame}
+
+\begin{frame}{Interpretation of Components}
+	What do the principal components actually represent?
+
+	\vspace{1em}
+
+	The first principal component $\vect{u}_1$ has approximate loadings:
+	\[
+		\vect{u}_1 \approx [0.52, -0.27, 0.58, 0.56]
+	\]
+
+	\pause
+
+	\textbf{Interpretation:} PC1 is roughly ``overall flower size''
+	\begin{itemize}
+		\item Large positive weights on petal length/width and sepal length
+		\item Negative weight on sepal width
+		\item Flowers with high PC1 scores are generally larger
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	The second principal component focuses on contrasts between sepal
+	and petal dimensions.
+
+	\vspace{0.5em}
+	\textbf{Note:}
+	Component interpretation is data-dependent and requires domain knowledge!
+\end{frame}
+
+% ============================================================================
+% SECTION VII: LIMITATIONS AND EXTENSIONS
+% ============================================================================
+
+\begin{frame}{Assumptions of PCA}
+	PCA makes several implicit assumptions:
+
+	\vspace{1em}
+
+	\textbf{1. Linearity}
+	\begin{itemize}
+		\item Principal components are linear combinations of original features
+		\item Projections are onto linear subspaces
+		\item Cannot capture nonlinear structure
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{2. Variance = Importance}
+	\begin{itemize}
+		\item Assumes high-variance directions are ``meaningful''
+		\item Works well when data is roughly Gaussian
+		\item Can fail when discriminative information is in low-variance directions
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{3. Orthogonality}
+	\begin{itemize}
+		\item Components must be uncorrelated (orthogonal)
+		\item Sometimes natural structure isn't orthogonal
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{When PCA Struggles}
+	\begin{center}
+		\textcolor{blue}{\fbox{\parbox{0.75\textwidth}{
+					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
+					Description:
+					Two examples where PCA fails:
+					\begin{itemize}
+						\item Left panel:
+						``Swiss roll'' - a 2D manifold embedded in 3D
+						that looks like a rolled-up sheet.
+						Show the 3D structure with points colored by
+						their position along the roll.
+						The structure is nonlinear---unrolling it
+						requires nonlinear methods.
+						Show that PCA would capture the major linear trends
+						but miss the rolled structure.
+						\item Right panel:
+						Two classes in 2D that are separable
+						but where the separation is in the low-variance direction.
+						For example, two elongated parallel clusters
+						with large variance along their length
+						but small variance between them.
+						PCA's first component would go along the clusters
+						(useless for classification),
+						while the discriminative direction is the second component
+						(low variance).
+					\end{itemize}
+				}}}
+	\end{center}
+\end{frame}
+
+\begin{frame}{Outlier Sensitivity}
+	PCA is based on variance (second-moment statistic),
+	making it sensitive to outliers.
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Problem:}
+	\begin{itemize}
+		\item Single outlier can heavily influence covariance matrix
+		\item Principal components may be ``pulled'' toward outliers
+		\item Resulting projection may not represent typical data structure
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Solutions:}
+	\begin{itemize}
+		\item Robust PCA variants (using robust covariance estimators)
+		\item Outlier detection and removal before PCA
+		\item Regularization methods
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Connections to Other Methods}
+	PCA is related to many other techniques:
+
+	\vspace{1em}
+
+	\textbf{Probabilistic PCA} (Bishop §12.2)
+	\begin{itemize}
+		\item Probabilistic latent variable model
+		\item Provides principled handling of missing data
+		\item Enables model comparison via likelihood
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Independent Component Analysis (ICA)}
+	\begin{itemize}
+		\item Finds statistically independent
+		      (not just uncorrelated) components
+		\item Useful for blind source separation
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Kernel PCA}
+	\begin{itemize}
+		\item Nonlinear generalization using kernel trick
+		\item Can capture curved manifold structure
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{More Extensions}
+	\textbf{Autoencoders}
+	\begin{itemize}
+		\item Neural network approach to dimensionality reduction
+		\item Can learn nonlinear encodings
+		\item Linear autoencoders recover PCA subspace
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Sparse PCA}
+	\begin{itemize}
+		\item Enforces sparsity in component loadings
+		\item Improves interpretability
+		      (only few features have non-zero weights)
+		\item Trades off variance explained for simplicity
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Supervised alternatives}
+	\begin{itemize}
+		\item Linear Discriminant Analysis (LDA): uses class labels
+		\item Partial Least Squares: considers both features and targets
+		\item Better when goal is prediction, not just description
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Practical Pitfalls}
+	Common mistakes when applying PCA:
+
+	\vspace{1em}
+
+	\textbf{1. Forgetting to center or scale}
+	\begin{itemize}
+		\item Always center data (subtract mean)
+		\item Usually standardize features (divide by std. dev.)
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{2. Over-interpreting components}
+	\begin{itemize}
+		\item Components are mathematical constructs, not always meaningful
+		\item Interpretation requires domain knowledge
+		\item Components can be unstable with small sample sizes
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{3. Wrong number of components}
+	\begin{itemize}
+		\item Too few: lose important information
+		\item Too many: keep noise, computational waste
+		\item Always validate on downstream task when possible
+	\end{itemize}
+\end{frame}
+
+% ============================================================================
+% SECTION VIII: PYTHON IMPLEMENTATION
+% ============================================================================
+
+\begin{frame}[fragile]{Implementation Options}
+	\textbf{Three main approaches in Python:}
+
+	\vspace{1em}
+
+	\textbf{1. NumPy (manual implementation)}
+	\begin{itemize}
+		\item Full control, educational value
+		\item Use \texttt{np.cov()} and \texttt{np.linalg.eig()}
+		\item Good for understanding, tedious for production
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{2. Scikit-learn (recommended)}
+	\begin{itemize}
+		\item \texttt{sklearn.decomposition.PCA}
+		\item Industry standard, well-tested, efficient
+		\item Consistent API with other sklearn methods
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{3. SciPy}
+	\begin{itemize}
+		\item Lower-level linear algebra routines
+		\item \texttt{scipy.linalg} for SVD-based approach
+		\item More flexible but requires more code
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Scikit-learn Example: Basic Usage}
+	\begin{lstlisting}
+import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+
+# Load your data (N samples, D features)
+X = np.loadtxt('data.csv', delimiter=',')
+
+# IMPORTANT: Standardize features to unit variance
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Fit PCA - reduce to 2 dimensions
+pca = PCA(n_components=2)
+X_reduced = pca.fit_transform(X_scaled)
+
+# X_reduced now has shape (N, 2)
+print(f"Reduced data shape: {X_reduced.shape}")
+\end{lstlisting}
+
+	\vspace{0.5em}
+	Key points: \textbf{always} standardize first, then fit PCA.
+\end{frame}
+
+\begin{frame}[fragile]{Analyzing Results}
+	\begin{lstlisting}
+# Variance explained by each component
+print("Variance explained ratio:")
+print(pca.explained_variance_ratio_)
+# Output: [0.729, 0.229]  (example values)
+
+# Cumulative variance
+print("Cumulative variance:")
+print(pca.explained_variance_ratio_.cumsum())
+# Output: [0.729, 0.958]
+
+# Access principal components (shape: n_components x n_features)
+components = pca.components_
+print(f"PC1 loadings: {components[0]}")
+
+# Reconstruct original data (with information loss)
+X_reconstructed = pca.inverse_transform(X_reduced)
+
+# Compute reconstruction error
+reconstruction_error = np.mean((X_scaled - X_reconstructed)**2)
+print(f"Mean squared error: {reconstruction_error:.4f}")
+\end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{Choosing Number of Components}
+	\begin{lstlisting}
+# Strategy 1: Fit with all components first, then decide
+pca_full = PCA()
+pca_full.fit(X_scaled)
+
+# Plot scree plot
+import matplotlib.pyplot as plt
+plt.figure(figsize=(8, 5))
+plt.plot(range(1, len(pca_full.explained_variance_) + 1),
+         pca_full.explained_variance_, 'bo-')
+plt.xlabel('Principal Component')
+plt.ylabel('Eigenvalue')
+plt.title('Scree Plot')
+plt.show()
+
+# Strategy 2: Specify variance threshold automatically
+pca_auto = PCA(n_components=0.95)  # Keep 95% variance
+pca_auto.fit(X_scaled)
+print(f"Number of components selected: {pca_auto.n_components_}")
+
+# Strategy 3: Cross-validation on downstream task
+# (use GridSearchCV with your classifier/regressor)
+\end{lstlisting}
+\end{frame}
+
+% ============================================================================
+% SECTION IX: SUMMARY AND TAKEAWAYS
+% ============================================================================
+
+\begin{frame}{Key Concepts Recap}
+	\textbf{What is PCA?}
+	\begin{itemize}
+		\item Unsupervised linear dimensionality reduction
+		\item Projects data onto lower-dimensional subspace
+		\item Preserves maximum variance
+		      (equivalently: minimizes reconstruction error)
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{How does it work?}
+	\begin{itemize}
+		\item Eigendecomposition of data covariance matrix
+		\item Principal components = eigenvectors
+		\item Components ordered by eigenvalues (= variance captured)
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Key assumptions:}
+	\begin{itemize}
+		\item Linearity of projections
+		\item Variance indicates importance
+		\item Orthogonality of components
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{When to Use PCA}
+	\textbf{Excellent for:}
+	\begin{itemize}
+		\item Exploratory data analysis
+		\item Visualization of high-dimensional data (reduce to 2D/3D)
+		\item Preprocessing for supervised learning
+		      (reduce features, speed up training)
+		\item Noise reduction (keep top components, discard noisy ones)
+		\item Compression (store low-dimensional representation)
+		\item When data is approximately Gaussian with linear structure
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Consider alternatives when:}
+	\begin{itemize}
+		\item Data lies on nonlinear manifold
+		      $\rightarrow$ Kernel PCA, t-SNE, UMAP
+		\item Discriminative task with labels
+		      $\rightarrow$ LDA, supervised methods
+		\item Need interpretable/sparse components
+		      $\rightarrow$ Sparse PCA, Factor Analysis
+		\item Outliers present $\rightarrow$ Robust PCA
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Looking Ahead}
+	\textbf{Topics we haven't covered:}
+
+	\vspace{1em}
+
+	\textbf{Probabilistic PCA} (Bishop §12.2)
+	\begin{itemize}
+		\item Latent variable model:
+		      $\vect{x} = \matr{W}\vect{z} + \boldsymbol{\mu}
+		      + \boldsymbol{\epsilon}$
+		\item Principled treatment of noise and missing data
+		\item Enables Bayesian inference, model selection
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{Advanced topics:}
+	\begin{itemize}
+		\item Kernel PCA for nonlinear dimensionality reduction
+		\item Factor Analysis and its relationship to PCA
+		\item Modern deep learning approaches (variational autoencoders)
+		\item Manifold learning methods (Isomap, LLE, t-SNE, UMAP)
+	\end{itemize}
+
+	\vspace{1em}
+	\pause
+
+	\textbf{For supervised learning:}
+	\begin{itemize}
+		\item Linear Discriminant Analysis (uses class labels)
+		\item Canonical Correlation Analysis (two sets of variables)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{References and Further Reading}
+	\textbf{Primary source:}
+	\begin{itemize}
+		\item Bishop, C.M. (2006).
+		      \emph{Pattern Recognition and Machine Learning.}
+		      Chapter 12 (§12.1)
+	\end{itemize}
+
+	\vspace{1em}
+
+	\textbf{Additional resources:}
+	\begin{itemize}
+		\item Jolliffe, I.T. (2002).
+		      \emph{Principal Component Analysis.} Springer.
+		      [Comprehensive treatment]
+		\item Shlens, J. (2014).
+		      ``A Tutorial on Principal Component Analysis.''
+		      arXiv:1404.1100 [Accessible tutorial]
+		\item James et al. (2013).
+		      \emph{An Introduction to Statistical Learning.}
+		      Chapter 10.2 [Practical perspective]
+	\end{itemize}
+
+	\vspace{1em}
+
+	\textbf{Software documentation:}
+	\begin{itemize}
+		\item Scikit-learn PCA guide:
+		      \texttt{scikit-learn.org/stable/modules/decomposition.html}
+	\end{itemize}
+
+	\vspace{1em}
+
+	\textbf{Questions?}
+\end{frame}
+
+\end{document}
