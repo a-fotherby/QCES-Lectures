@@ -142,6 +142,129 @@ def generate_3d_projection_figure():
     print("  Saved: ../figures/slide25_projection_3d.png")
 
 
+def generate_orthogonal_decomposition_figure():
+    """Generate 2D orthogonal decomposition showing variance-error equivalence"""
+    print("Generating Orthogonal Decomposition Figure...")
+
+    # Create figure with two side-by-side subplots
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
+
+    # Define the original data point (as a vector from origin)
+    original_vector = np.array([3.0, 2.0])
+
+    # Define the 1D subspace direction (first principal component)
+    subspace_direction = np.array([1.0, 0.3])
+    subspace_direction = subspace_direction / np.linalg.norm(subspace_direction)
+
+    # Calculate parallel (projection) and perpendicular components
+    parallel_magnitude = np.dot(original_vector, subspace_direction)
+    parallel_component = parallel_magnitude * subspace_direction
+    perpendicular_component = original_vector - parallel_component
+
+    # Function to draw the decomposition on an axis
+    def draw_decomposition(ax, show_variance_labels=False):
+        # Set limits and aspect
+        ax.set_xlim(-0.5, 3.5)
+        ax.set_ylim(-0.5, 2.5)
+        ax.set_aspect('equal', adjustable='box')
+        ax.grid(True, alpha=0.3)
+        ax.axhline(y=0, color='k', linewidth=0.8)
+        ax.axvline(x=0, color='k', linewidth=0.8)
+
+        # Draw the 1D subspace line
+        line_extent = 4
+        ax.plot([-line_extent * subspace_direction[0], line_extent * subspace_direction[0]],
+                [-line_extent * subspace_direction[1], line_extent * subspace_direction[1]],
+                'gray', linewidth=2, alpha=0.5, linestyle='--',
+                label='1D Subspace (span of $\\mathbf{u}_1$)')
+
+        # Draw original vector
+        ax.annotate('', xy=original_vector, xytext=(0, 0),
+                   arrowprops=dict(arrowstyle='->', color='#3498db',
+                                 lw=3, mutation_scale=20))
+        ax.text(original_vector[0] + 0.1, original_vector[1] + 0.1,
+               r'$\tilde{\mathbf{x}}_n$', fontsize=14, fontweight='bold',
+               color='#3498db')
+
+        # Draw parallel component (projection)
+        ax.annotate('', xy=parallel_component, xytext=(0, 0),
+                   arrowprops=dict(arrowstyle='->', color='#27ae60',
+                                 lw=2.5, mutation_scale=20))
+
+        # Draw perpendicular component (reconstruction error)
+        ax.annotate('', xy=original_vector, xytext=parallel_component,
+                   arrowprops=dict(arrowstyle='->', color='#e74c3c',
+                                 lw=2.5, mutation_scale=20))
+
+        # Add labels based on panel type
+        if not show_variance_labels:
+            # Left panel: geometric labels
+            ax.text(parallel_component[0]/2 - 0.3, parallel_component[1]/2 - 0.2,
+                   'Parallel\ncomponent', fontsize=11,
+                   color='#27ae60', fontweight='bold',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                           alpha=0.8, edgecolor='#27ae60'))
+
+            ax.text((parallel_component[0] + original_vector[0])/2 + 0.2,
+                   (parallel_component[1] + original_vector[1])/2,
+                   'Perpendicular\ncomponent', fontsize=11,
+                   color='#e74c3c', fontweight='bold',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                           alpha=0.8, edgecolor='#e74c3c'))
+
+            # Draw right angle symbol
+            corner_size = 0.15
+            corner = parallel_component
+            v1 = perpendicular_component / np.linalg.norm(perpendicular_component) * corner_size
+            v2 = subspace_direction * corner_size
+            corner_points = np.array([
+                corner + v2,
+                corner + v2 + v1,
+                corner + v1
+            ])
+            ax.plot([corner_points[0, 0], corner_points[1, 0], corner_points[2, 0]],
+                   [corner_points[0, 1], corner_points[1, 1], corner_points[2, 1]],
+                   'k-', linewidth=1.5)
+
+        else:
+            # Right panel: variance interpretation labels
+            ax.text(parallel_component[0]/2 - 0.3, parallel_component[1]/2 - 0.3,
+                   'Captured\n(large variance)', fontsize=11,
+                   color='#27ae60', fontweight='bold',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                           alpha=0.8, edgecolor='#27ae60'))
+
+            ax.text((parallel_component[0] + original_vector[0])/2 + 0.2,
+                   (parallel_component[1] + original_vector[1])/2,
+                   'Lost\n(small variance)', fontsize=11,
+                   color='#e74c3c', fontweight='bold',
+                   bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                           alpha=0.8, edgecolor='#e74c3c'))
+
+            # Add equivalence note
+            ax.text(0.5, 0.05, 'Minimizing red ↔ Maximizing green',
+                   transform=ax.transAxes, fontsize=10,
+                   ha='center', style='italic',
+                   bbox=dict(boxstyle='round,pad=0.4', facecolor='lightyellow',
+                           alpha=0.8, edgecolor='gray'))
+
+        ax.set_xlabel('$x_1$', fontsize=12)
+        ax.set_ylabel('$x_2$', fontsize=12)
+
+    # Draw left panel: Geometric decomposition
+    draw_decomposition(ax1, show_variance_labels=False)
+    ax1.set_title('Geometric Decomposition', fontsize=14, fontweight='bold', pad=10)
+
+    # Draw right panel: Variance interpretation
+    draw_decomposition(ax2, show_variance_labels=True)
+    ax2.set_title('Variance Interpretation', fontsize=14, fontweight='bold', pad=10)
+
+    plt.tight_layout()
+    plt.savefig('../figures/slide30_orthogonal_decomp.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    print("  Saved: ../figures/slide30_orthogonal_decomp.png")
+
+
 def main():
     """Generate all geometric PCA figures"""
     print("\n" + "=" * 60)
@@ -149,13 +272,15 @@ def main():
     print("=" * 60 + "\n")
 
     generate_3d_projection_figure()
+    generate_orthogonal_decomposition_figure()
 
     print("\n" + "=" * 60)
-    print("Successfully generated geometric figure")
+    print("Successfully generated 2 geometric figures")
     print("=" * 60)
-    print("\nFile created in ../figures/ directory:")
-    print("  1. slide25_projection_3d.png - Slide 25: 3D Projection (300 DPI)")
-    print("\nThis file is ready to use in your LaTeX presentation.")
+    print("\nFiles created in ../figures/ directory:")
+    print("  1. slide25_projection_3d.png       - Slide 25: 3D Projection (300 DPI)")
+    print("  2. slide30_orthogonal_decomp.png   - Slide 30: Orthogonal Decomposition (300 DPI)")
+    print("\nThese files are ready to use in your LaTeX presentation.")
     print("=" * 60 + "\n")
 
 
