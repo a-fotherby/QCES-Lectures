@@ -94,6 +94,20 @@ def add_arrow(ax, direction, scale, color, label):
                      edgecolor=color, alpha=0.8))
 
 
+def generate_figure_0():
+    """Generate Figure 0: Basic 2D Elliptical Data (Slide 6)"""
+    print("Generating Figure 0: Basic 2D Elliptical Data...")
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    plot_scatter(ax)
+    ax.legend(loc='upper left', framealpha=0.9)
+
+    plt.tight_layout()
+    plt.savefig('../figures/slide06_elliptical_data.png', dpi=300, bbox_inches='tight')
+    plt.close()
+    print("  Saved: ../figures/slide06_elliptical_data.png")
+
+
 def generate_figure_1():
     """Generate Figure 1: First Principal Component"""
     print("Generating Figure 1: First Principal Component...")
@@ -190,9 +204,9 @@ def generate_figure_3():
 
 
 def main():
-    """Generate all three PCA conceptual figures"""
+    """Generate all PCA conceptual figures"""
     print("\n" + "=" * 60)
-    print("Generating PCA Conceptual Figures for Slides 8-10")
+    print("Generating PCA Conceptual Figures for Slides 6, 9-11")
     print("=" * 60 + "\n")
 
     print(f"Data: {n_points} points from 2D elliptical distribution")
@@ -201,17 +215,19 @@ def main():
     print(f"Second PC explains {eigenvalues[1]/eigenvalues.sum()*100:.1f}% of variance\n")
 
     # Generate all figures
+    generate_figure_0()
     generate_figure_1()
     generate_figure_2()
     generate_figure_3()
 
     print("\n" + "=" * 60)
-    print("Successfully generated 3 figures")
+    print("Successfully generated 4 figures")
     print("=" * 60)
     print("\nFiles created in ../figures/ directory:")
-    print("  1. slide09_first_pc.png   - Slide 9: First PC (300 DPI)")
-    print("  2. slide10_both_pcs.png   - Slide 10: Both PCs (300 DPI)")
-    print("  3. slide11_projection.png - Slide 11: Projection (300 DPI)")
+    print("  1. slide06_elliptical_data.png - Slide 6: Raw data cloud (300 DPI)")
+    print("  2. slide09_first_pc.png        - Slide 9: First PC (300 DPI)")
+    print("  3. slide10_both_pcs.png        - Slide 10: Both PCs (300 DPI)")
+    print("  4. slide11_projection.png      - Slide 11: Projection (300 DPI)")
     print("\nThese files are ready to use in your LaTeX presentation.")
     print("=" * 60 + "\n")
 
