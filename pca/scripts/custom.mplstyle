@@ -1,0 +1,101 @@
+# Enhanced Matplotlib Stylesheet for Thesis Printing
+# Optimized for clear, bold presentation in printed academic documents
+
+# Axes Properties
+axes.titlesize   : 18        # Larger title font size for better visibility
+axes.titleweight : bold      # Bold title
+axes.labelsize   : 20        # X and Y label font size
+axes.labelweight : bold      # Bold label
+axes.linewidth   : 2.0       # Thicker axis spines
+
+# Line Properties
+lines.linewidth  : 3.0       # Thicker lines for print clarity
+lines.markersize : 10        # Larger markers for better visibility
+lines.markeredgewidth : 2.0  # Thicker marker edges
+
+# Tick Properties
+xtick.labelsize  : 18        # Larger X-tick font size
+ytick.labelsize  : 18        # Larger Y-tick font size
+xtick.major.width : 2.0      # Thicker major tick marks
+xtick.minor.width : 1.5      # Thicker minor tick marks
+ytick.major.width : 2.0      # Thicker major tick marks
+ytick.minor.width : 1.5      # Thicker minor tick marks
+xtick.major.size : 6.0       # Longer major ticks
+xtick.minor.size : 3.5       # Longer minor ticks
+ytick.major.size : 6.0       # Longer major ticks
+ytick.minor.size : 3.5       # Longer minor ticks
+xtick.direction  : in        # Ticks point inward
+ytick.direction  : in        # Ticks point inward
+
+# Grid Settings
+axes.grid        : False     # Disable gridlines
+grid.color       : None      # Ensure grid color is None
+grid.linestyle   : None      # Ensure gridlines do not appear
+
+# Font Properties
+font.family      : serif     # Use serif font for academic style
+font.weight      : bold      # Use bold font where possible for readability
+font.size        : 18        # Base font size
+
+# Legend Properties
+legend.fontsize  : 14        # Larger legend font size
+legend.title_fontsize : 15   # Larger legend title
+legend.frameon   : True      # Draw a frame around the legend
+legend.framealpha: 1         # Make the legend background fully opaque
+legend.edgecolor : black     # Black border around legend
+legend.fancybox  : True      # Rounded corners for the legend
+legend.borderpad : 0.5       # More padding inside legend
+legend.columnspacing : 1.5   # More space between columns
+legend.handlelength : 2.0    # Longer legend handles
+
+# Figure Properties
+figure.figsize   : 8, 6      # Slightly larger default figure size
+figure.dpi       : 300       # High resolution for publication
+figure.titlesize : 20        # Figure title size
+figure.titleweight : bold    # Bold figure titles
+
+# Savefig Properties
+savefig.dpi      : 300       # High DPI for saved figures
+savefig.format   : png       # Default save format
+savefig.bbox     : tight     # Fit tightly around the figure to minimize white space
+
+# Color Cycle 
+axes.prop_cycle  : cycler('color', ['C41E3A', '003F87', 'D4AF37', '0B6623', 'FF6600', '4B0082', '008B8B', '8B4513', 'FF1493', '2F4F4F', 'B8860B', '800020'])
+
+# Patch Properties (for bar charts, etc.)
+patch.linewidth  : 2.0       # Thicker edges for patches
+patch.edgecolor  : black     # Black edges by default
+
+# Error Bar Properties
+errorbar.capsize : 5         # Size of error bar caps
+
+# Histogram Properties
+hist.bins        : auto      # Automatic bin selection
+
+# Text Properties for Annotations
+text.usetex      : False     # Don't use LaTeX by default (can be overridden)
+
+# Scatter Plot Properties
+scatter.edgecolors : face    # Edge colors match face colors
+scatter.marker   : o         # Default marker style
+
+# Box Plot Properties
+boxplot.flierprops.markeredgewidth : 1.5
+boxplot.boxprops.linewidth : 2.0
+boxplot.whiskerprops.linewidth : 2.0
+boxplot.capprops.linewidth : 2.0
+boxplot.medianprops.linewidth : 2.5
+boxplot.meanprops.linewidth : 2.5
+
+# Contour Plot Properties
+contour.linewidth : 2.0      # Thicker contour lines
+
+# Additional Print-Optimized Settings
+axes.spines.top    : True    # Show top spine
+axes.spines.right  : True    # Show right spine
+axes.spines.left   : True    # Show left spine
+axes.spines.bottom : True    # Show bottom spine
+
+# Mathematical Text
+mathtext.fontset : dejavuserif  # Better math rendering
+mathtext.default : regular      # Regular weight for math text
