@@ -13,6 +13,7 @@ from matplotlib.patches import FancyArrowPatch
 # Apply custom matplotlib style if available
 try:
     plt.style.use('custom.mplstyle')
+    print("Using custom.mplstyle")
 except OSError:
     print("Warning: custom.mplstyle not found, using default style")
 
