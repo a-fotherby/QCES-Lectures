@@ -169,10 +169,7 @@
 
 \begin{frame}{A Simple 2D Example}
 	\begin{center}
-		\includegraphics[width=0.7\textwidth]{figures/slide06_elliptical_data.png}
-
-		\vspace{0.3em}
-		\small{\textit{2D data points forming an elliptical cloud}}
+		\includegraphics[width=0.65\textwidth]{figures/slide06_elliptical_data.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -204,10 +201,7 @@
 
 \begin{frame}{Visual: First Principal Component}
 	\begin{center}
-		\includegraphics[width=0.7\textwidth]{figures/slide09_first_pc.png}
-
-		\vspace{0.3em}
-		\small{\textit{First principal component $\vect{u}_1$ captures maximum variance}}
+		\includegraphics[width=0.65\textwidth]{figures/slide09_first_pc.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -217,10 +211,7 @@
 
 \begin{frame}{Visual: Second Principal Component}
 	\begin{center}
-		\includegraphics[width=0.7\textwidth]{figures/slide10_both_pcs.png}
-
-		\vspace{0.3em}
-		\small{\textit{Both principal components shown as orthogonal vectors}}
+		\includegraphics[width=0.65\textwidth]{figures/slide10_both_pcs.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -230,10 +221,7 @@
 
 \begin{frame}{Projection Intuition}
 	\begin{center}
-		\includegraphics[width=0.7\textwidth]{figures/slide11_projection.png}
-
-		\vspace{0.3em}
-		\small{\textit{Projection onto first principal component reduces dimensionality}}
+		\includegraphics[width=0.65\textwidth]{figures/slide11_projection.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -615,10 +603,7 @@
 
 \begin{frame}{The Projection Operation}
 	\begin{center}
-		\includegraphics[width=0.75\textwidth]{figures/slide25_projection_3d.png}
-
-		\vspace{0.3em}
-		\small{\textit{3D projection showing reconstruction error in PCA}}
+		\includegraphics[width=0.55\textwidth]{figures/slide25_projection_3d.png}
 	\end{center}
 \end{frame}
 
@@ -739,9 +724,6 @@
 \begin{frame}{Geometric Interpretation}
 	\begin{center}
 		\includegraphics[width=0.9\textwidth]{figures/slide30_orthogonal_decomp.png}
-
-		\vspace{0.3em}
-		\small{\textit{Orthogonal decomposition showing variance-error equivalence}}
 	\end{center}
 \end{frame}
 
@@ -842,22 +824,7 @@
 
 \begin{frame}{Scree Plot}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					A scree plot showing eigenvalue magnitude vs. component number.
-					X-axis: ``Principal Component'' numbered 1 to 20.
-					Y-axis: ``Eigenvalue $\lambda_i$'' (log scale preferred).
-					The plot should show a characteristic ``elbow'' pattern:
-					first few eigenvalues are large and drop rapidly,
-					then there's an elbow around component 4-5,
-					after which eigenvalues decrease slowly.
-					Mark the elbow point with a dashed vertical line
-					and annotation ``Elbow suggests $M \approx 4$''.
-					Use blue circles connected by lines.
-					Include a horizontal red dashed line showing
-					``noise floor'' for the smallest eigenvalues.
-				}}}
+		\includegraphics[width=0.70\textwidth]{figures/slide34_scree_plot.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -866,25 +833,10 @@
 
 \begin{frame}{Cumulative Variance Explained}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					Plot of cumulative proportion of variance explained
-					vs. number of components.
-					X-axis: ``Number of Components $M$'' from 1 to 20.
-					Y-axis: ``Cumulative Variance Explained'' from 0 to 1
-					(or 0\% to 100\%).
-					Show a monotonically increasing curve that starts steep
-					and gradually flattens.
-					Add horizontal dashed lines at 0.90, 0.95, and 0.99 with labels.
-					Add vertical dashed lines showing how many components needed
-					to reach each threshold
-					(e.g., $M=5$ for 90\%, $M=8$ for 95\%, $M=12$ for 99\%).
-					Use a smooth blue curve.
-				}}}
+		\includegraphics[width=0.60\textwidth]{figures/slide35_cumulative_variance.png}
 	\end{center}
 
-	\vspace{0.5em}
+	\vspace{0.3em}
 	Proportion of variance explained by first $M$ components:
 	\[
 		\frac{\sum_{i=1}^M \lambda_i}{\sum_{i=1}^D \lambda_i}
@@ -967,45 +919,17 @@
 
 \begin{frame}{Example: Original High-Dimensional Data}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.8\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					A 2×2 grid of scatter plots showing pairwise relationships
-					between the 4 iris features.
-					Each subplot shows two features against each other
-					(sepal length vs sepal width, sepal length vs petal length, etc.).
-					Points should be colored by species:
-					red for setosa, green for versicolor, blue for virginica.
-					This creates a ``pairs plot'' or ``scatter plot matrix.''
-					Label axes clearly with feature names.
-					Show that in the original feature space,
-					species have some separation but overlap exists in certain views.
-				}}}
+		\includegraphics[width=0.63\textwidth]{figures/slide38_iris_pairs.png}
 	\end{center}
 
-	\vspace{0.5em}
-	The original 4D space shown as pairwise projections.
-	Some separation between species is visible, but overlapping.
+	\vspace{0.3em}
+	Feature histograms colored by species reveal
+	distinct distributions, especially for petal dimensions.
 \end{frame}
 
 \begin{frame}{Covariance Structure}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.6\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					Heatmap of the 4×4 covariance matrix.
-					Rows and columns labeled:
-					sepal length, sepal width, petal length, petal width.
-					Use a diverging colormap
-					(e.g., blue for negative, white for zero,
-					red for positive correlations).
-					Strong positive correlations should appear
-					between petal length/width and sepal length.
-					Sepal width might show weaker or slightly negative correlation
-					with others.
-					Add a colorbar.
-					Annotate cells with numerical correlation values.
-				}}}
+		\includegraphics[width=0.50\textwidth]{figures/slide39_covariance.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -1015,48 +939,17 @@
 
 \begin{frame}{Eigenvalue Spectrum}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					Scree plot for the Iris dataset showing 4 eigenvalues.
-					X-axis: Component number (1-4).
-					Y-axis: Eigenvalue magnitude.
-					Show bars or connected points.
-					First eigenvalue should be dominant (much larger than others),
-					second eigenvalue moderate, third and fourth small.
-					Include numerical labels on each point
-					showing the actual eigenvalue.
-					Below or beside,
-					show the variance explained by each component as percentages
-					(e.g., PC1: 72.9\%, PC2: 22.8\%, PC3: 3.7\%, PC4: 0.5\%
-					--- these are approximate typical values for scaled Iris data).
-				}}}
+		\includegraphics[width=0.60\textwidth]{figures/slide40_eigenvalues.png}
 	\end{center}
 
 	\vspace{0.5em}
-	First two components capture $\sim$96\% of variance---excellent
+	First two components capture $\sim$98\% of variance---excellent
 	for 2D visualization!
 \end{frame}
 
 \begin{frame}{First Two Principal Components}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.7\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					2D scatter plot of the Iris data projected onto
-					the first two principal components.
-					X-axis: ``First Principal Component (PC1)''
-					ranging approximately -3 to 3.
-					Y-axis: ``Second Principal Component (PC2)''
-					ranging approximately -2 to 2.
-					Color points by species
-					(same colors as before:
-					red setosa, green versicolor, blue virginica).
-					Show that setosa is clearly separated from the other two species,
-					while versicolor and virginica have slight overlap.
-					This demonstrates that PCA preserves the species structure well.
-					Add a legend showing species colors.
-				}}}
+		\includegraphics[width=0.65\textwidth]{figures/slide41_pc_projection.png}
 	\end{center}
 
 	\vspace{0.5em}
@@ -1067,29 +960,11 @@
 
 \begin{frame}{Reconstruction Quality}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.8\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					Show reconstruction quality comparison.
-					Create a 2×3 grid:
-					\begin{itemize}
-						\item Row 1:
-						Three iris flower samples
-						(can be stylized representations or actual iris photos)
-						\item Row 2:
-						Reconstructions of the same samples using 2 PCs
-					\end{itemize}
-					Add text below each column showing
-					``Original'', ``2 PCs (96\% var.)''.
-					If using actual measurements,
-					show the 4 feature values as bar charts for each sample,
-					comparing original (blue bars) vs. reconstructed (orange bars).
-					Include reconstruction error values.
-				}}}
+		\includegraphics[width=0.95\textwidth]{figures/slide42_reconstruction.png}
 	\end{center}
 
 	\vspace{0.5em}
-	With 2 components (96\% variance), reconstruction is excellent.
+	With 2 components (98\% variance), reconstruction is excellent.
 	Original and reconstructed feature values are very close.
 \end{frame}
 
@@ -1098,18 +973,20 @@
 
 	\vspace{1em}
 
-	The first principal component $\vect{u}_1$ has approximate loadings:
+	The first principal component $\vect{u}_1$ has loadings:
 	\[
-		\vect{u}_1 \approx [0.52, -0.27, 0.58, 0.56]
+		\vect{u}_1 = [0.362, -0.082, 0.857, 0.359]
 	\]
+	for sepal length, sepal width, petal length, and petal width respectively.
 
 	\pause
 
-	\textbf{Interpretation:} PC1 is roughly ``overall flower size''
+	\textbf{Interpretation:} PC1 is dominated by petal dimensions
 	\begin{itemize}
-		\item Large positive weights on petal length/width and sepal length
-		\item Negative weight on sepal width
-		\item Flowers with high PC1 scores are generally larger
+		\item Very large positive weight on petal length (0.857)
+		\item Moderate positive weights on petal width and sepal length
+		\item Near-zero weight on sepal width (-0.082)
+		\item PC1 primarily captures variation in petal size
 	\end{itemize}
 
 	\vspace{1em}
@@ -1161,33 +1038,12 @@
 
 \begin{frame}{When PCA Struggles}
 	\begin{center}
-		\textcolor{blue}{\fbox{\parbox{0.75\textwidth}{
-					\textbf{[IMAGE PLACEHOLDER]}\\[1em]
-					Description:
-					Two examples where PCA fails:
-					\begin{itemize}
-						\item Left panel:
-						``Swiss roll'' - a 2D manifold embedded in 3D
-						that looks like a rolled-up sheet.
-						Show the 3D structure with points colored by
-						their position along the roll.
-						The structure is nonlinear---unrolling it
-						requires nonlinear methods.
-						Show that PCA would capture the major linear trends
-						but miss the rolled structure.
-						\item Right panel:
-						Two classes in 2D that are separable
-						but where the separation is in the low-variance direction.
-						For example, two elongated parallel clusters
-						with large variance along their length
-						but small variance between them.
-						PCA's first component would go along the clusters
-						(useless for classification),
-						while the discriminative direction is the second component
-						(low variance).
-					\end{itemize}
-				}}}
+		\includegraphics[width=0.95\textwidth]{figures/slide45_pca_failures.png}
 	\end{center}
+
+	\vspace{0.3em}
+	PCA fails when data has nonlinear structure or when
+	discriminative information lies in low-variance directions.
 \end{frame}
 
 \begin{frame}{Outlier Sensitivity}
@@ -1346,7 +1202,8 @@
 	\end{itemize}
 \end{frame}
 
-\begin{frame}[fragile]{Scikit-learn Example: Basic Usage}
+\begin{frame}[fragile,shrink=10]{Scikit-learn Example: Basic Usage}
+	\footnotesize
 	\begin{lstlisting}
 import numpy as np
 from sklearn.decomposition import PCA
@@ -1371,7 +1228,8 @@ print(f"Reduced data shape: {X_reduced.shape}")
 	Key points: \textbf{always} standardize first, then fit PCA.
 \end{frame}
 
-\begin{frame}[fragile]{Analyzing Results}
+\begin{frame}[fragile,shrink=20]{Analyzing Results}
+	\footnotesize
 	\begin{lstlisting}
 # Variance explained by each component
 print("Variance explained ratio:")
@@ -1396,7 +1254,8 @@ print(f"Mean squared error: {reconstruction_error:.4f}")
 \end{lstlisting}
 \end{frame}
 
-\begin{frame}[fragile]{Choosing Number of Components}
+\begin{frame}[fragile,shrink=25]{Choosing Number of Components}
+	\footnotesize
 	\begin{lstlisting}
 # Strategy 1: Fit with all components first, then decide
 pca_full = PCA()
